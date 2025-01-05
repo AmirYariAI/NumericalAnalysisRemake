@@ -1,18 +1,18 @@
-from typing import List,Callable
+from typing import List, Any, Callable
 from conf import *
-import sys
+import time
 
-def nameof(var):
+def nameof(var:Any):
     return f'{var=}'.split('=')[0]
 
-class Lagrange:
+class BasicInterpolation:
 
-    F_points : List[float] = []
+    F_points: List[float] = []
     X_points: List[float] = []
-    MinX : float = None
-    MaxX : float = None
+    MinX: float = None
+    MaxX: float = None
 
-    def __init__(self,x_points:List[float],f_points:List[float]) -> None:
+    def __init__(self, x_points:List[float], f_points:List[float], process_point:bool=True) -> None:
 
         n : int = len(x_points)
 
@@ -22,15 +22,16 @@ class Lagrange:
         if n != len(f_points) :
             raise ValueError(f"{nameof(x_points)} and {nameof(f_points)} must be at the same length.")
 
-        self.F_points = f_points.copy()
-        self.X_points = x_points.copy()
+        if process_point:
+            self.F_points = f_points.copy()
+            self.X_points = x_points.copy()
 
-        self.MinX = x_points[0]
-        self.MaxX = x_points[0]
+            self.MinX = x_points[0]
+            self.MaxX = x_points[0]
 
-        for index in range(n):
-            self.MinX = min(x_points[index],self.MinX)
-            self.MaxX = max(x_points[index],self.MaxX)
+            for index in range(1,n):
+                self.MinX = min(x_points[index],self.MinX)
+                self.MaxX = max(x_points[index],self.MaxX)
 
         if DEBUG:
             print("init executed")
@@ -38,39 +39,37 @@ class Lagrange:
     def __call__(self,x:float) -> float:
         return  self.predict(x)
 
-    def predict(self,x : float) -> float:
+    def predict(self,x: float) -> float:
 
         if not(self.MinX <= x <= self.MaxX):
             raise ValueError(f"{x=} must be in the range of [{self.MinX} , {self.MaxX}]")
 
-        fx : float =  0.0
+        return 0.0
 
-        if DEBUG:
-            print(f"->> Lagrange Interpolation for f({x}):")
-
-        for i,fi in enumerate(self.F_points):
-
-            l = self.LagrangeMultiplier(x,i)
-            fx += round(l * fi,MAX_DIGITS)
-
-            if DEBUG:
-                print(f'({l})*{fi} ',end="+ ")
-
-        fx = round(fx,MAX_DIGITS)
-
-        if DEBUG:
-            print(f"\b\b= {fx}")
-
-        return fx
 
     def __str__(self) -> str:
-        pass
+        return "Basic Interpolation"
 
     def __repr__(self) -> str:
+        return "BasicInterpolation()"
+
+    def add_point(self,x:float,f:float) -> None:
+
+        if x in self.X_points:
+            raise  ValueError(f"{x=} is already in the list")
+
+    def save(self,path:str) -> bool:
         pass
 
+    def load(self,path:str) -> bool:
+        pass
 
-    def LagrangeMultiplier(self,x,index :int) -> float:
+class Lagrange(BasicInterpolation):
+
+    def __init__(self,x_points:List[float],f_points:List[float]):
+        super().__init__(x_points = x_points,f_points = f_points,process_point=True)
+
+    def __lagrange_multiplier(self,x:float,index :int) -> float:
 
         xi : float = self.X_points[index]
         l : float = 1.0
@@ -81,10 +80,38 @@ class Lagrange:
 
         return round(l,MAX_DIGITS)
 
-    def add_point(self,x,f):
+    def predict(self,x : float) -> float:
 
-        if x in self.X_points:
-            raise  ValueError(f"{x=} is already in the list")
+        if not(self.MinX <= x <= self.MaxX):
+            raise ValueError(f"{x=} must be in the range of [{self.MinX} , {self.MaxX}]")
+
+        fx : float =  0.0
+        start : float = 0
+
+        if DEBUG:
+            start = time.time()
+            print(f"->> Lagrange Interpolation for f({x}):")
+
+        for i,fi in enumerate(self.F_points):
+
+            l = self.__lagrange_multiplier(x,i)
+            fx += round(l * fi,MAX_DIGITS)
+
+            if DEBUG:
+                print(f'({l})*{fi} ',end="+ ")
+
+        fx = round(fx,MAX_DIGITS)
+
+        if DEBUG:
+            print(f"\b\b= {fx}")
+            execution_time = time.time() - start
+            print(f"Execution Time : {execution_time} s")
+
+        return fx
+
+    def add_point(self,x:float,f:float) -> Callable[[float],float] :
+
+        super().add_point(x,f)
 
         x_points = self.X_points.copy()
         f_points = self.F_points.copy()
@@ -95,11 +122,7 @@ class Lagrange:
         new_obj = Lagrange(x_points,f_points)
         return new_obj
 
-    def save(self):
-        pass
 
-    def load(self):
-        pass
 
 if __name__ == "__main__":
 
@@ -109,4 +132,3 @@ if __name__ == "__main__":
 
     x3 = x2.add_point(1.5,0)
     print(x3(1.5))
-    sys.exit(0)
