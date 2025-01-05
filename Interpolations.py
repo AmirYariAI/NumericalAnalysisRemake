@@ -122,13 +122,87 @@ class Lagrange(BasicInterpolation):
         new_obj = Lagrange(x_points,f_points)
         return new_obj
 
+class DiffError(Exception):
+    pass
 
+class Newton(BasicInterpolation):
+
+    class FiniteDiff(BasicInterpolation):
+
+        h : float = None
+        def __init__(self,x_points:List[float],f_points:List[float]):
+            super().__init__(x_points = x_points,f_points = f_points,process_point=False)
+
+            temp_x = [(x,f) for x,f in zip(x_points,f_points)]
+            temp_x.sort(key = lambda point : point[0])
+
+            self.X_points = []
+            self.F_points = []
+            for x,f in temp_x:
+                self.X_points.append(x)
+                self.F_points.append(f)
+
+            self.MinX = self.X_points[0]
+            self.MaxX = self.X_points[-1]
+
+            px = self.X_points[0]
+            for x in self.X_points[1:]:
+                if not self.h:
+                      self.h = x - px
+                elif self.h != (x - px):
+                    raise DiffError(f"{nameof(x_points)} Must have a same differences")
+                px = x
+
+            print("FiniteDiff")
+
+    class DividedDifferences(BasicInterpolation):
+
+        def __init__(self, x_points: List[float], f_points: List[float]):
+            super().__init__(x_points=x_points, f_points=f_points,process_point=True)
+            print("FiniteDiff")
+
+    def __init__(self,x_points:List[float],f_points:List[float]):
+
+        super().__init__(x_points=x_points,f_points=f_points,process_point=False)
+
+        try:
+            self.__interpolation = Newton.FiniteDiff(x_points,f_points)
+        except DiffError:
+            self.__interpolation = Newton.DividedDifferences(x_points,f_points)
+        except Exception as e:
+            raise e
+
+    def __repr__(self):
+        return repr(self.__interpolation)
+    def __str__(self):
+        return  str(self.__interpolation)
+    def __call__(self,x:float):
+        return self.__interpolation(x)
+
+    def save(self,path:str) -> bool:
+        return self.__interpolation.save(path)
+
+    def load(self,path:str) -> bool:
+        return self.__interpolation.load(path)
+
+    def add_point(self,x:float,f:float):
+        return self.__interpolation.add_point(x,f)
 
 if __name__ == "__main__":
 
     print("Hello World")
     x2 = Lagrange([1,2], [20,10])
     print(x2(1.5))
+
+    # inp = input()
+    # X , Y = [] , []
+    # while inp != "":
+    #    x , y = map(float,inp.split())
+    #    X.append(x)
+    #    Y.append(y)
+    #    if len(X) > 1 :
+    #        print(x - X[-2])
+    #    inp = input()
 
     x3 = x2.add_point(1.5,0)
     print(x3(1.5))
