@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="BasicInterpolation Added as Interpolations Base Class">
+    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="setup Newton Classes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Interpolations.py" beforeDir="false" afterPath="$PROJECT_DIR$/Interpolations.py" afterDir="false" />
     </list>
@@ -98,13 +98,22 @@
       <option name="project" value="LOCAL" />
       <updated>1736086057866</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="setup Newton Classes">
+      <option name="closed" value="true" />
+      <created>1736088712515</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1736088712515</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="initial commit" />
     <MESSAGE value="Lagrange Interpolations added" />
     <MESSAGE value="BasicInterpolation Added as Interpolations Base Class" />
-    <option name="LAST_COMMIT_MESSAGE" value="BasicInterpolation Added as Interpolations Base Class" />
+    <MESSAGE value="setup Newton Classes" />
+    <option name="LAST_COMMIT_MESSAGE" value="setup Newton Classes" />
   </component>
 </project>
