@@ -79,15 +79,14 @@ class Lagrange(BasicInterpolation):
 
     def predict(self,x : float) -> float:
 
-        if not(self.MinX <= x <= self.MaxX):
-            raise ValueError(f"{x=} must be in the range of [{self.MinX} , {self.MaxX}]")
+        super().predict(x)
 
         fx : float =  0.0
         start : float = 0
 
         if DEBUG:
             start = time.time()
-            print(f"->> Lagrange Interpolation for f({x}):")
+            print(f"->> Lagrange Interpolation for p({x}):")
 
         for i,fi in enumerate(self.F_points):
 
@@ -203,7 +202,6 @@ class Newton(BasicInterpolation):
                     print(point_str.center(word_space), end="↓")
 
                 print("\b")
-            print()
 
         def __create_table(self) -> List[List[float]]:
             n = len(self.F_points)
@@ -262,6 +260,7 @@ class Newton(BasicInterpolation):
 
         def predict(self,x: float) -> float:
 
+            super().predict(x)
             if self.is_forward:
                 result = self.__predict_forward(x)
             else:
@@ -274,8 +273,11 @@ class Newton(BasicInterpolation):
             s = (x - self.MinX) / self.h
             s = round(s,MAX_DIGITS)
             newton_factor = 1
-
             n = len(self.diff_table)
+
+            if DEBUG:
+                print(f"p({x}) = {result} ",end='+')
+
             for k in range(1,n):
 
                 factor = (s-k+1) / k
@@ -285,6 +287,11 @@ class Newton(BasicInterpolation):
 
                 result += round(self.diff_table[k][0]*newton_factor,MAX_DIGITS)
 
+                if DEBUG:
+                    print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
+
+            print(f"\b= {result}")
+
             return  result
 
         def __predict_backward(self, x:float) -> float:
@@ -292,8 +299,11 @@ class Newton(BasicInterpolation):
             t = (x - self.MaxX) / self.h
             t = round(t, MAX_DIGITS)
             newton_factor = 1
-
             n = len(self.diff_table)
+
+            if DEBUG:
+                print(f"p({x}) = {result} ",end='+')
+
             for k in range(1, n):
                 factor = (t + k - 1) / k
                 factor = round(factor, MAX_DIGITS)
@@ -301,6 +311,11 @@ class Newton(BasicInterpolation):
                 newton_factor *= factor
 
                 result += round(self.diff_table[k][-1] * newton_factor, MAX_DIGITS)
+
+                if DEBUG:
+                    print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
+
+            print(f"\b= {result}")
 
             return result
 
@@ -336,8 +351,6 @@ class Newton(BasicInterpolation):
                 if not self.is_forward:
                     mode_str = "Backward"
                 print(f"Changed to *({mode_str})* Newton Finite Differences Interpolation")
-
-
 
     class DividedDifferences(BasicInterpolation):
         diff_table: List[List[float]] = [[]]
