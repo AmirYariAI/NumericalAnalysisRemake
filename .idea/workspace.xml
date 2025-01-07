@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="setup Newton Classes">
+    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="add Debug mode for predict function of FiniteDifferences">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Interpolations.py" beforeDir="false" afterPath="$PROJECT_DIR$/Interpolations.py" afterDir="false" />
     </list>
@@ -106,7 +106,23 @@
       <option name="project" value="LOCAL" />
       <updated>1736088712515</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="programming Newton.FiniteDifferences&#10;&#10;other changes : &#10;1.refactoring add_point method">
+      <option name="closed" value="true" />
+      <created>1736151355656</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1736151355656</updated>
+    </task>
+    <task id="LOCAL-00006" summary="add Debug mode for predict function of FiniteDifferences">
+      <option name="closed" value="true" />
+      <created>1736151818355</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1736151818355</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -114,6 +130,8 @@
     <MESSAGE value="Lagrange Interpolations added" />
     <MESSAGE value="BasicInterpolation Added as Interpolations Base Class" />
     <MESSAGE value="setup Newton Classes" />
-    <option name="LAST_COMMIT_MESSAGE" value="setup Newton Classes" />
+    <MESSAGE value="programming Newton.FiniteDifferences&#10;&#10;other changes : &#10;1.refactoring add_point method" />
+    <MESSAGE value="add Debug mode for predict function of FiniteDifferences" />
+    <option name="LAST_COMMIT_MESSAGE" value="add Debug mode for predict function of FiniteDifferences" />
   </component>
 </project>

@@ -65,6 +65,8 @@ class Lagrange(BasicInterpolation):
 
     def __init__(self,x_points:List[float],f_points:List[float]):
         super().__init__(x_points = x_points,f_points = f_points,process_point=True)
+        if DEBUG:
+            print('Lagrange init executed')
 
     def __lagrange_multiplier(self,x:float,index :int) -> float:
 
@@ -123,7 +125,7 @@ class Newton(BasicInterpolation):
         h : float = None
         is_forward:bool = True
 
-        def __init__(self,x_points:List[float],f_points:List[float],is_forward:bool = True):
+        def __init__(self,x_points:List[float],f_points:List[float],is_forward:bool = True)-> None:
 
             super().__init__(x_points = x_points,f_points = f_points,process_point=False)
             self.is_forward = is_forward
@@ -206,7 +208,7 @@ class Newton(BasicInterpolation):
         def __create_table(self) -> List[List[float]]:
             n = len(self.F_points)
 
-            table = [self.F_points.copy()]
+            table :List[List[float]] = [self.F_points.copy()]
             for i in range(n-1,0,-1):
                 row : List[float] = []
 
@@ -327,6 +329,7 @@ class Newton(BasicInterpolation):
                 if self.MinX - x != self.h:
                     raise DiffError(f"{self.MinX} - {x} != {self.h}")
 
+                self.MinX = x
                 self.X_points.insert(0,x)
                 self.F_points.insert(0,f)
                 self.diff_table = self.__update_table_min(f)
@@ -335,6 +338,7 @@ class Newton(BasicInterpolation):
                 if x - self.MaxX != self.h:
                     raise DiffError(f"{x} - {self.MaxX} != {self.h}")
 
+                self.MaxX = x
                 self.X_points.append(x)
                 self.F_points.append(f)
                 self.diff_table = self.__update_table_max(f)
@@ -353,24 +357,142 @@ class Newton(BasicInterpolation):
                 print(f"Changed to *({mode_str})* Newton Finite Differences Interpolation")
 
     class DividedDifferences(BasicInterpolation):
+
         diff_table: List[List[float]] = [[]]
         is_forward: bool = True
 
-        def __init__(self, x_points: List[float], f_points: List[float],is_forward: bool = True):
+        def __init__(self, x_points: List[float], f_points: List[float],is_forward: bool = True)-> None:
             super().__init__(x_points=x_points, f_points=f_points,process_point=True)
             self.is_forward = is_forward
-            print("FiniteDiff")
+            self.diff_table = self.__create_table()
+            if DEBUG:
+                self.__print_table()
+                print("DividedDifferences init executed ")
 
-    def __init__(self,x_points:List[float],f_points:List[float]):
+        def __print_table(self) -> None:
+
+            n = len(self.F_points)
+            max_n_str : int = math.floor(math.log10(n))
+
+            selector_open, selector_close = "(", ")"
+
+            word_space = math.ceil(math.log10(self.MaxX)) + 2 + MAX_DIGITS
+            print("-( Divided Differences Table )-".center(13 + n * word_space + n + 1))
+            print(" f[xi,...,xi+k] \\Xi ".center(20+max_n_str), end="|")
+            for i in range(n):
+                print(f"{self.X_points[i]}".center(word_space), end='|')
+            print()
+
+            print(f"f(x)".center(20+max_n_str), end="|")
+
+            point_str = f"{self.diff_table[0][0]}"
+            if self.is_forward:
+                point_str = selector_open + point_str + selector_close
+            print(point_str.center(word_space), end="↓")
+            for f in self.diff_table[0][1:-1]:
+                print(f"{f}".center(word_space), end="↓")
+
+            point_str = f"{self.diff_table[0][-1]}"
+            if not self.is_forward:
+                point_str = selector_open + point_str + selector_close
+            print(point_str.center(word_space), end="↓")
+
+            print("\b")
+
+            for i in range(1, n):
+
+                print(f"f[xi,...xi+{i}]".center(20+max_n_str), end="|")
+
+                print(" " * ((word_space // 2 + 1) * i), end="")
+
+                point_str = f"{self.diff_table[i][0]}"
+                if self.is_forward or i + 1 == n:
+                    point_str = selector_open + point_str + selector_close
+                print(point_str.center(word_space), end="↓")
+
+                for f in self.diff_table[i][1:-1]:
+                    print(f"{f}".center(word_space), end="↓")
+
+                if i + 1 != n:
+                    point_str = f"{self.diff_table[i][-1]}"
+                    if not self.is_forward:
+                        point_str = selector_open + point_str + selector_close
+                    print(point_str.center(word_space), end="↓")
+
+                print("\b")
+
+        def __create_table(self) -> list[list[float]]:
+
+            n:int = len(self.X_points)
+            table : List[List[float]] = [self.F_points.copy()]
+
+            for i in range(n-1,0,-1):
+                row : List[float] = []
+                x_diss = n - i
+                for j in range(i):
+                    f = table[-1][j+1]
+                    pf = table[-1][j]
+
+                    xik = self.X_points[j+x_diss]
+                    xi = self.X_points[j]
+
+                    diff = round((f - pf)/(xik - xi), MAX_DIGITS)
+                    row.append(diff)
+                print(x_diss)
+                table.append(row)
+
+            return  table
+
+        def __update_table(self,x:float,f:float) -> list[list[float]]:
+            pass
+
+        def predict(self,x: float) -> float:
+            super().predict(x)
+            if self.is_forward:
+                result = self.__predict_forward(x)
+            else:
+                result = self.__predict_backward(x)
+
+            return result
+
+        def __predict_forward(self,x:float) -> float:
+            pass
+
+        def __predict_backward(self,x:float) -> float:
+            pass
+
+        def add_point(self,x:float,f:float) -> None:
+            super().add_point(x,f)
+
+            self.MinX = min(x,self.MinX)
+            self.MaxX = max(x,self.MaxX)
+
+            self.diff_table = self.__update_table(x,f)
+
+            if DEBUG:
+                self.__print_table()
+
+        def change_direction(self) -> None:
+            self.is_forward = not self.is_forward
+            if DEBUG:
+                mode_str = "Forward"
+                if not self.is_forward:
+                    mode_str = "Backward"
+                print(f"Changed to *({mode_str})* Newton Finite Differences Interpolation")
+
+    def __init__(self,x_points:List[float],f_points:List[float],is_forward:bool = True):
 
         super().__init__(x_points=x_points,f_points=f_points,process_point=False)
 
         try:
-            self.__interpolation = Newton.FiniteDifferences(x_points, f_points)
+            self.__interpolation = Newton.FiniteDifferences(x_points, f_points,is_forward)
         except DiffError:
-            self.__interpolation = Newton.DividedDifferences(x_points,f_points)
+            self.__interpolation = Newton.DividedDifferences(x_points,f_points,is_forward)
         except Exception as e:
             raise e
+
+        if DEBUG:
+            print("Newton init executed")
 
     def __repr__(self):
         return repr(self.__interpolation)
@@ -402,10 +524,13 @@ if __name__ == "__main__":
     #print(x2(1.5))
 
     x12,f12 = C(5)
-    x12 = [0,1,2]
-    f12 = [0,-1,2]
+    #x12 = [0,1,2]
+    #f12 = [0,-1,2]
+    CC = Newton.DividedDifferences(x12, f12, False)
+    print(CC(10.5))
     CC = Newton.FiniteDifferences(x12, f12, False)
-    print(CC(1.5))
+    print(CC(10.5))
+    #print(CC(1.5))
     #CC.add_point(10.5,10.5**3)
 
     # inp = input()
