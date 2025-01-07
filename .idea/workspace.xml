@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="add Debug mode for predict function of FiniteDifferences">
+    <list default="true" id="fbb2873f-f7cd-4de0-bbf8-ffaa287a4054" name="Changes" comment="setup DividedDifferences and debug FiniteDifferences">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Interpolations.py" beforeDir="false" afterPath="$PROJECT_DIR$/Interpolations.py" afterDir="false" />
     </list>
@@ -44,15 +44,15 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Interpolations.executor": "Run",
-    "Python.conf.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Interpolations.executor&quot;: &quot;Run&quot;,
+    &quot;Python.conf.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -122,7 +122,15 @@
       <option name="project" value="LOCAL" />
       <updated>1736151818355</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="setup DividedDifferences and debug FiniteDifferences">
+      <option name="closed" value="true" />
+      <created>1736284726688</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1736284726688</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -132,6 +140,7 @@
     <MESSAGE value="setup Newton Classes" />
     <MESSAGE value="programming Newton.FiniteDifferences&#10;&#10;other changes : &#10;1.refactoring add_point method" />
     <MESSAGE value="add Debug mode for predict function of FiniteDifferences" />
-    <option name="LAST_COMMIT_MESSAGE" value="add Debug mode for predict function of FiniteDifferences" />
+    <MESSAGE value="setup DividedDifferences and debug FiniteDifferences" />
+    <option name="LAST_COMMIT_MESSAGE" value="setup DividedDifferences and debug FiniteDifferences" />
   </component>
 </project>

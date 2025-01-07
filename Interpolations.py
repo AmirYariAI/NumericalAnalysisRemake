@@ -292,7 +292,8 @@ class Newton(BasicInterpolation):
                 if DEBUG:
                     print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
 
-            print(f"\b= {result}")
+            if DEBUG:
+                print(f"\b= {result}")
 
             return  result
 
@@ -317,7 +318,8 @@ class Newton(BasicInterpolation):
                 if DEBUG:
                     print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
 
-            print(f"\b= {result}")
+            if DEBUG:
+                print(f"\b= {result}")
 
             return result
 
@@ -438,13 +440,32 @@ class Newton(BasicInterpolation):
 
                     diff = round((f - pf)/(xik - xi), MAX_DIGITS)
                     row.append(diff)
-                print(x_diss)
+
                 table.append(row)
 
             return  table
 
         def __update_table(self,x:float,f:float) -> list[list[float]]:
-            pass
+            n = len(self.F_points)
+
+            table = self.diff_table.copy()
+            table[0].append(f)
+
+            for i in range(1, n - 1):
+
+                f = table[i - 1][-1]
+                pf = table[i - 1][-2]
+
+                xi = self.X_points[-1 - i]
+
+                diff = round((f - pf)/(x - xi), MAX_DIGITS)
+                table[i].append(diff)
+
+            f = table[- 1][-1]
+            pf = table[- 1][-2]
+            table.append([f - pf])
+
+            return table
 
         def predict(self,x: float) -> float:
             super().predict(x)
@@ -456,16 +477,62 @@ class Newton(BasicInterpolation):
             return result
 
         def __predict_forward(self,x:float) -> float:
-            pass
+            result = self.diff_table[0][0]
+            newton_factor = 1
+            n = len(self.diff_table)
 
-        def __predict_backward(self,x:float) -> float:
-            pass
+            if DEBUG:
+                print(f"p({x}) = {result} ", end='+')
+
+            for k in range(1, n):
+
+                factor = (x - self.X_points[k - 1])
+                factor = round(factor, MAX_DIGITS)
+
+                newton_factor *= factor
+
+                result += round(self.diff_table[k][0] * newton_factor, MAX_DIGITS)
+
+                if DEBUG:
+                    print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
+
+            if DEBUG:
+                print(f"\b= {result}")
+
+            return result
+
+        def __predict_backward(self, x: float) -> float:
+            result = self.diff_table[0][-1]
+            newton_factor = 1
+            n = len(self.diff_table)
+
+            if DEBUG:
+                print(f"p({x}) = {result} ", end='+')
+
+            for k in range(1, n):
+                factor = (x - self.X_points[-k])
+                factor = round(factor, MAX_DIGITS)
+
+                newton_factor *= factor
+
+                result += round(self.diff_table[k][-1] * newton_factor, MAX_DIGITS)
+
+                if DEBUG:
+                    print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
+
+            if DEBUG:
+                print(f"\b= {result}")
+
+            return result
 
         def add_point(self,x:float,f:float) -> None:
             super().add_point(x,f)
 
             self.MinX = min(x,self.MinX)
             self.MaxX = max(x,self.MaxX)
+
+            self.X_points.append(x)
+            self.F_points.append(f)
 
             self.diff_table = self.__update_table(x,f)
 
@@ -526,10 +593,7 @@ if __name__ == "__main__":
     x12,f12 = C(5)
     #x12 = [0,1,2]
     #f12 = [0,-1,2]
-    CC = Newton.DividedDifferences(x12, f12, False)
-    print(CC(10.5))
-    CC = Newton.FiniteDifferences(x12, f12, False)
-    print(CC(10.5))
+
     #print(CC(1.5))
     #CC.add_point(10.5,10.5**3)
 
