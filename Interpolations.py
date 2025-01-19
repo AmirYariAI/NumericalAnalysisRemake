@@ -577,7 +577,144 @@ class Newton(BasicInterpolation):
     def add_point(self,x:float,f:float) -> None:
         self.__interpolation.add_point(x,f)
 
-def C(n):
+class CubicSpline(BasicInterpolation):
+
+    class SplinePolynomial:
+
+        x: float = None
+        a: float = None
+        b: float = None
+        c: float = None
+        d: float = None
+
+        def __init__(self,x:float = 0,a:float = 0,b:float = 0,c:float = 0,d:float = 0):
+            self.x = x
+            self.a = a
+            self.b = b
+            self.c = c
+            self.d = d
+
+        def __call__(self,x:float)-> float:
+            return self.predict(x)
+
+        def __str__(self) -> str:
+
+            result  = f"{self.a}"
+            result += f"+ {self.b} * (x - {self.x})"
+            result += f"+ {self.c} * (x - {self.x})^2"
+            result += f"+ {self.d} * (x - {self.x})^3"
+
+            return result
+
+        def __repr__(self) -> str:
+            return f"CubicSpline.SplinePolynomial({self.x=},{self.a=},{self.b=},{self.c=},{self.d=})"
+
+        def predict(self,x:float) -> float:
+            factor = round(x - self.x,MAX_DIGITS)
+
+            result = self.a
+            result += round(self.b * (factor ** 1),MAX_DIGITS)
+            result += round(self.c * (factor ** 2),MAX_DIGITS)
+            result += round(self.d * (factor ** 3),MAX_DIGITS)
+
+            return result
+
+    __polynomials: List[SplinePolynomial] = []
+    __n : int = 0
+
+    def __init__(self,x_points:List[float], f_points:List[float],
+                 dfx0:float = None,dfxn : float = None) -> None:
+
+        super().__init__(x_points,f_points,process_point=False)
+
+        self.__n = len(x_points)
+
+        temp_x = [(x, f) for x, f in zip(x_points, f_points)]
+        temp_x.sort(key=lambda point: point[0])
+
+
+        self.X_points = []
+        self.F_points = []
+
+        for x, f in temp_x:
+            self.X_points.append(x)
+            self.F_points.append(f)
+
+
+        self.MinX = self.X_points[0]
+        self.MaxX = self.X_points[-1]
+
+        self.__build_polynomials(dfx0,dfxn)
+
+        if DEBUG:
+            print("CubicSpline init executed")
+
+    def __build_polynomials(self,dfx0:float = None,dfxn : float = None) -> None:
+
+        h : List[float] = []
+        self.__polynomials : List[CubicSpline.SplinePolynomial] = []
+
+        for i in range(self.__n -1):
+
+            x:float = self.X_points[i]
+            a:float = self.F_points[i]
+            polynomial = CubicSpline.SplinePolynomial(x=x,a=a)
+            self.__polynomials.append(polynomial)
+
+            hi :float = round(self.X_points[i+1] - self.X_points[i] ,MAX_DIGITS)
+            h.append(hi)
+
+        print(h)
+
+        if dfx0 and dfxn:
+            self.__polynomials[0 ].b = dfx0
+            self.__polynomials[-1].b = dfxn
+        else:
+            self.__polynomials[0 ].c = 0
+            self.__polynomials[-1].c = 0
+
+        # Ac = y
+        A : List[List[float]] = []
+        y : List[float] = []
+
+        for i in range(1,self.__n - 1):
+
+            row :List[float] = [0 for _ in range(self.__n - 2)]
+            index = i - 1
+
+            if index > 0:
+                row[ index-1 ] = h[index-1]
+
+            row[ index ] = 2*(h[index-1] - h[index])
+
+            if i != self.__n - 2:
+                row[ index+1 ] = h[index]
+
+            value : float = 0
+            y.append(value)
+            A.append(row)
+
+        print('0000')
+        for i in A:
+            print(i)
+
+    def predict(self,x: float) -> float:
+        super().predict(x)
+
+        for i in range(self.__n - 1):
+            xi = self.X_points[i]
+            xi1 = self.X_points[i + 1]
+
+            if xi <= x < xi1:
+                return self.__polynomials[i].predict(x)
+
+        return self.F_points[-1]
+
+    def add_point(self,x:float,f:float) -> None:
+        raise Exception("not implemented")
+
+
+def sc(n):
     x11 , f11 = [] , []
     for i in range(10,n+10):
         x11.append(i)
@@ -590,7 +727,10 @@ if __name__ == "__main__":
     #x2 = Lagrange([1,2], [20,10])
     #print(x2(1.5))
 
-    x12,f12 = C(5)
+    x12,f12 = sc(4)
+    print(x12,f12[:3])
+    cs = CubicSpline(x12,f12)
+    print(cs(0))
     #x12 = [0,1,2]
     #f12 = [0,-1,2]
 
