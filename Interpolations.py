@@ -146,7 +146,8 @@ class Newton(BasicInterpolation):
             for x in self.X_points[1:]:
                 if not self.h:
                       self.h = x - px
-                elif self.h != (x - px):
+                elif self.h != round(x - px,MAX_DIGITS):
+                    print(self.h , x - px)
                     raise DiffError(f"{f"{x_points=}".split('=')[0]} Must have a same differences")
                 px = x
 
@@ -290,7 +291,7 @@ class Newton(BasicInterpolation):
                 result += round(self.diff_table[k][0]*newton_factor,MAX_DIGITS)
 
                 if DEBUG:
-                    print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
+                    print(f" {self.diff_table[k][0]} * ({newton_factor}) ", end='+')
 
             if DEBUG:
                 print(f"\b= {result}")
