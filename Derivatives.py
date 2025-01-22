@@ -1,9 +1,6 @@
 import math
-from math import factorial
-from secrets import token_urlsafe
 from typing import List
 from conf import *
-import time
 from Interpolations import Newton
 
 class NewtonDerivative(Newton.FiniteDifferences):
@@ -13,25 +10,34 @@ class NewtonDerivative(Newton.FiniteDifferences):
         if DEBUG:
             print("NewtonDerivative init executed")
 
+    def __call__(self,x:float ,step:int=-1) -> float:
+        return  self.predict(x=x,step=step)
+
     def predict(self,x: float,step:int=-1) -> float:
         if x not in self.X_points:
             raise ValueError(f"{x=} is invalid")
 
-        self.__print_table()
         return self.__predict_derivative(x = x , s = 0 , step = step)
 
-    def predict_next(self, x:float,step:int=-1) -> float:
+    def predict_next_step(self, x:float,step:int=-1) -> float:
 
         if x not in self.X_points:
             raise ValueError(f"{x=} is invalid")
 
-        return self.__predict_derivative(x=x, s=1)
+        return self.__predict_derivative(x=x, s=1,step=step)
+
+    def predict_next_half_step(self, x:float,step:int=-1) -> float:
+
+        if x not in self.X_points:
+            raise ValueError(f"{x=} is invalid")
+
+        return self.__predict_derivative(x=x, s=0.5,step=step)
 
     def __predict_derivative(self, x : float, s : float, step:int=-1) -> float:
 
         x_index = self.X_points.index(x)
         result = 0
-        n = max(len(self.diff_table) - x_index , step)
+        n = min(len(self.diff_table) - x_index , step+1) if step != -1 else len(self.diff_table) - x_index
 
         if DEBUG:
             print(f"f'({x}) =(", end='')
@@ -47,8 +53,8 @@ class NewtonDerivative(Newton.FiniteDifferences):
         result = round(result * (1 / self.h),MAX_DIGITS)
 
         if DEBUG:
-            print(f"\b) * ({1/self.h})= {result}")
-            self.__print_table(x_index=x_index)
+            print(f"\b) * ({1/self.h})= {result} (step : {n - 1})")
+            self.__print_table(x_index=x_index,step=step)
 
         return result
 
@@ -72,7 +78,7 @@ class NewtonDerivative(Newton.FiniteDifferences):
 
         return factor
 
-    def __print_table(self,x_index = -1):
+    def __print_table(self,x_index = -1,step:int = -1):
 
         n = len(self.F_points)
         selector_open, selector_close = "(", ")"
@@ -99,20 +105,15 @@ class NewtonDerivative(Newton.FiniteDifferences):
 
             for index,f in enumerate(self.diff_table[i]):
 
-                if index == x_index <= n - (i+1):
-                    point_str = f"{selector_open}{f}{selector_close}"
-                    print(point_str.center(word_space), end="↓")
-                    continue
+                if step == -1 or i <= step :
+                    if index == x_index <= n - (i+1)  :
+                        point_str = f"{selector_open}{f}{selector_close}"
+                        print(point_str.center(word_space), end="↓")
+                        continue
 
                 print(f"{f}".center(word_space), end="↓")
 
             print("\b")
-
-    def gg(self):
-        print("***")
-        for i in range(1,5):
-            self.__s_factor(s=0, k=i)
-            print(1 / i,self.__s_factor(s = 0 , k = i))
 
 def sc(n):
     x11 , f11 = [] , []
@@ -122,8 +123,12 @@ def sc(n):
     return x11,f11
 
 if __name__ == "__main__":
-    x12, f12 = [0.1,0.2,0.3,0.4],[-1,2,3,5]
 
-    a = NewtonDerivative(x12,f12)
-    a(0.1)
-    a.gg()
+    print("Test 1")
+
+    x_points, f_points = [0.1,0.2,0.3,0.4],[-1,2,3,5]
+    a = NewtonDerivative(x_points,f_points)
+    a.predict(x=0.1,step = -1)
+
+
+
