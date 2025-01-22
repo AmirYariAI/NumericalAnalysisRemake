@@ -1,6 +1,6 @@
-from math import factorial
 
 from conf import *
+from DebugAssistant import debug_status
 from typing import  List
 
 
@@ -24,17 +24,9 @@ def tabel_row(i:int,x_values : List[float] , error : float):
 
     print("",error)
 
-def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float],debug_status:str = "auto") -> List[float]:
+def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float],debug_mode:str = "auto") -> List[float]:
 
-    match debug_status.lower():
-        case "auto":
-            debug = DEBUG
-        case "true" | "on" | "1":
-            debug = True
-        case "false" | "off" | "0":
-            debug = False
-        case _:
-            raise ValueError(f"{debug_status=} is invalid")
+    debug = debug_status(debug_mode)
 
     n = len(starter_x)
 
@@ -43,7 +35,7 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
 
     x : List[float] = starter_x.copy()
 
-    if DEBUG:
+    if debug:
         table_header(n)
 
     epsilon = 10 ** (-MAX_DIGITS)
@@ -64,7 +56,7 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
 
     while error > epsilon:
 
-        if DEBUG :
+        if debug :
             tabel_row(i=iteration,x_values=x,error=error)
 
         for i in range(n):
@@ -92,7 +84,7 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
 
         iteration += 1
 
-    if DEBUG:
+    if debug:
         tabel_row(i=iteration, x_values=x, error=error)
 
     return x

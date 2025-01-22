@@ -1,45 +1,46 @@
 import math
 from typing import List
 from conf import *
+from DebugAssistant import debug_status
 from Interpolations import Newton
 
 class NewtonDerivative(Newton.FiniteDifferences):
 
     def __init__(self, x_points: List[float], f_points: List[float]) -> None:
-        super().__init__(x_points=x_points,f_points=f_points,is_forward=True)
-        if DEBUG:
-            print("NewtonDerivative init executed")
+        super().__init__(x_points=x_points,f_points=f_points,is_forward=True,debug_mode="0")
 
-    def __call__(self,x:float ,step:int=-1) -> float:
-        return  self.predict(x=x,step=step)
+    def __call__(self,x:float ,step:int=-1,debug_mode:str = "auto") -> float:
+        return  self.predict(x=x,step=step,debug_mode = debug_mode)
 
-    def predict(self,x: float,step:int=-1) -> float:
+    def predict(self,x: float,step:int=-1,debug_mode:str = "auto") -> float:
         if x not in self.X_points:
             raise ValueError(f"{x=} is invalid")
 
-        return self.__predict_derivative(x = x , s = 0 , step = step)
+        return self.__predict_derivative(x = x , s = 0 , step = step,debug_mode=debug_mode)
 
-    def predict_next_step(self, x:float,step:int=-1) -> float:
-
-        if x not in self.X_points:
-            raise ValueError(f"{x=} is invalid")
-
-        return self.__predict_derivative(x=x, s=1,step=step)
-
-    def predict_next_half_step(self, x:float,step:int=-1) -> float:
+    def predict_next_step(self, x:float,step:int=-1,debug_mode:str = "auto") -> float:
 
         if x not in self.X_points:
             raise ValueError(f"{x=} is invalid")
 
-        return self.__predict_derivative(x=x, s=0.5,step=step)
+        return self.__predict_derivative(x=x, s=1,step=step,debug_mode=debug_mode)
 
-    def __predict_derivative(self, x : float, s : float, step:int=-1) -> float:
+    def predict_next_half_step(self, x:float,step:int=-1,debug_mode:str = "auto") -> float:
+
+        if x not in self.X_points:
+            raise ValueError(f"{x=} is invalid")
+
+        return self.__predict_derivative(x=x, s=0.5,step=step,debug_mode=debug_mode)
+
+    def __predict_derivative(self, x : float, s : float, step:int=-1,debug_mode:str = "auto") -> float:
+
+        debug = debug_status(debug_mode)
 
         x_index = self.X_points.index(x)
         result = 0
         n = min(len(self.diff_table) - x_index , step+1) if step != -1 else len(self.diff_table) - x_index
 
-        if DEBUG:
+        if debug:
             print(f"f'({x}) =(", end='')
 
         for k in range(1, n):
@@ -47,12 +48,12 @@ class NewtonDerivative(Newton.FiniteDifferences):
             factor = self.__s_factor(s = s,k = k)
             result += round(self.diff_table[k][x_index] * factor, MAX_DIGITS)
 
-            if DEBUG:
+            if debug:
                 print(f" {self.diff_table[k][x_index]} * ({factor}) ", end='+')
 
         result = round(result * (1 / self.h),MAX_DIGITS)
 
-        if DEBUG:
+        if debug:
             print(f"\b) * ({1/self.h})= {result} (step : {n - 1})")
             self.__print_table(x_index=x_index,step=step)
 
@@ -125,9 +126,8 @@ def sc(n):
 if __name__ == "__main__":
 
     print("Test 1")
-
-    x_points, f_points = [0.1,0.2,0.3,0.4],[-1,2,3,5]
-    a = NewtonDerivative(x_points,f_points)
+    t1_x_points, t1_f_points = [0.1,0.2,0.3,0.4],[-1,2,3,5]
+    a = NewtonDerivative(t1_x_points,t1_f_points)
     a.predict(x=0.1,step = -1)
 
 

@@ -1,4 +1,3 @@
-
 DEBUG = True
 MAX_DIGITS = 10
 

@@ -1,5 +1,6 @@
 import math
 from typing import List
+from DebugAssistant import debug_status
 from conf import *
 
 class BasicInterpolation:
@@ -30,13 +31,10 @@ class BasicInterpolation:
                 self.MinX = min(x_points[index],self.MinX)
                 self.MaxX = max(x_points[index],self.MaxX)
 
-        if DEBUG:
-            print("Basic init executed")
+    def __call__(self,x:float,debug_mode:str = "auto") -> float:
+        return  self.predict(x,debug_mode)
 
-    def __call__(self,x:float) -> float:
-        return  self.predict(x)
-
-    def predict(self,x: float) -> float:
+    def predict(self,x: float,debug_mode:str = "auto") -> float:
 
         if not(self.MinX <= x <= self.MaxX):
             raise ValueError(f"{x=} must be in the range of [{self.MinX} , {self.MaxX}]")
@@ -64,8 +62,6 @@ class Lagrange(BasicInterpolation):
 
     def __init__(self,x_points:List[float],f_points:List[float]):
         super().__init__(x_points = x_points,f_points = f_points,process_point=True)
-        if DEBUG:
-            print('Lagrange init executed')
 
     def __lagrange_multiplier(self,x:float,index :int) -> float:
 
@@ -78,13 +74,14 @@ class Lagrange(BasicInterpolation):
 
         return round(l,MAX_DIGITS)
 
-    def predict(self,x : float) -> float:
+    def predict(self,x : float,debug_mode:str = "auto") -> float:
 
+        debug = debug_status(debug_mode)
         super().predict(x)
 
         fx : float =  0.0
 
-        if DEBUG:
+        if debug:
             print(f"->> Lagrange Interpolation for p({x}):")
 
         for i,fi in enumerate(self.F_points):
@@ -92,12 +89,12 @@ class Lagrange(BasicInterpolation):
             l = self.__lagrange_multiplier(x,i)
             fx += round(l * fi,MAX_DIGITS)
 
-            if DEBUG:
+            if debug:
                 print(f'({l})*{fi} ',end="+ ")
 
         fx = round(fx,MAX_DIGITS)
 
-        if DEBUG:
+        if debug:
             print(f"\b\b= {fx}")
 
         return fx
@@ -120,11 +117,13 @@ class Newton(BasicInterpolation):
         h : float = None
         is_forward:bool = True
 
-        def __init__(self,x_points:List[float],f_points:List[float],is_forward:bool = True)-> None:
+        def __init__(self,x_points:List[float],f_points:List[float],is_forward:bool = True,debug_mode:str = "auto")-> None:
 
+            debug = debug_status(debug_mode)
+            
             super().__init__(x_points = x_points,f_points = f_points,process_point=False)
             self.is_forward = is_forward
-
+            
             temp_x = [(x,f) for x,f in zip(x_points,f_points)]
             temp_x.sort(key = lambda point : point[0])
 
@@ -147,9 +146,8 @@ class Newton(BasicInterpolation):
                 px = x
 
             self.diff_table = self.__create_table()
-            if DEBUG:
+            if debug:
                 self.__print_table()
-                print("FiniteDifferences init executed ")
 
         def __print_table(self):
 
@@ -256,24 +254,27 @@ class Newton(BasicInterpolation):
 
             return table
 
-        def predict(self,x: float) -> float:
+        def predict(self,x: float,debug_mode:str = "auto") -> float:
 
             super().predict(x)
             if self.is_forward:
-                result = self.__predict_forward(x)
+                result = self.__predict_forward(x,debug_mode)
             else:
-                result = self.__predict_backward(x)
+                result = self.__predict_backward(x,debug_mode)
 
             return result
 
-        def __predict_forward(self, x:float) -> float:
+        def __predict_forward(self, x:float,debug_mode:str = "auto") -> float:
+
+            debug = debug_status(debug_mode)
+
             result = self.diff_table[0][0]
             s = (x - self.MinX) / self.h
             s = round(s,MAX_DIGITS)
             newton_factor = 1
             n = len(self.diff_table)
 
-            if DEBUG:
+            if debug:
                 print(f"p({x}) = {result} ",end='+')
 
             for k in range(1,n):
@@ -285,22 +286,25 @@ class Newton(BasicInterpolation):
 
                 result += round(self.diff_table[k][0]*newton_factor,MAX_DIGITS)
 
-                if DEBUG:
+                if debug:
                     print(f" {self.diff_table[k][0]} * ({newton_factor}) ", end='+')
 
-            if DEBUG:
+            if debug:
                 print(f"\b= {result}")
 
             return  result
 
-        def __predict_backward(self, x:float) -> float:
+        def __predict_backward(self, x:float,debug_mode:str = "auto") -> float:
+
+            debug = debug_status(debug_mode)
+
             result = self.diff_table[0][-1]
             t = (x - self.MaxX) / self.h
             t = round(t, MAX_DIGITS)
             newton_factor = 1
             n = len(self.diff_table)
 
-            if DEBUG:
+            if debug:
                 print(f"p({x}) = {result} ",end='+')
 
             for k in range(1, n):
@@ -311,15 +315,18 @@ class Newton(BasicInterpolation):
 
                 result += round(self.diff_table[k][-1] * newton_factor, MAX_DIGITS)
 
-                if DEBUG:
+                if debug:
                     print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
 
-            if DEBUG:
+            if debug:
                 print(f"\b= {result}")
 
             return result
 
-        def add_point(self,x:float,f:float) -> None:
+        def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
+
+            debug = debug_status(debug_mode)
+
             super().add_point(x,f)
 
             if x <= self.MinX :
@@ -343,12 +350,15 @@ class Newton(BasicInterpolation):
             else:
                 raise DiffError(f"{x=} can not be added into the {f"{self.X_points=}".split('=')[0]}")
 
-            if DEBUG:
+            if debug:
                 self.__print_table()
 
-        def change_direction(self) -> None:
+        def change_direction(self,debug_mode:str = "auto") -> None:
+
+            debug = debug_status(debug_mode)
+
             self.is_forward = not self.is_forward
-            if DEBUG:
+            if debug:
                 mode_str = "Forward"
                 if not self.is_forward:
                     mode_str = "Backward"
@@ -359,13 +369,15 @@ class Newton(BasicInterpolation):
         diff_table: List[List[float]] = [[]]
         is_forward: bool = True
 
-        def __init__(self, x_points: List[float], f_points: List[float],is_forward: bool = True)-> None:
+        def __init__(self, x_points: List[float], f_points: List[float],is_forward: bool = True,debug_mode:str = "auto")-> None:
+
+            debug = debug_status(debug_mode)
+
             super().__init__(x_points=x_points, f_points=f_points,process_point=True)
             self.is_forward = is_forward
             self.diff_table = self.__create_table()
-            if DEBUG:
+            if debug:
                 self.__print_table()
-                print("DividedDifferences init executed ")
 
         def __print_table(self) -> None:
 
@@ -463,21 +475,24 @@ class Newton(BasicInterpolation):
 
             return table
 
-        def predict(self,x: float) -> float:
+        def predict(self,x: float,debug_mode:str = "auto") -> float:
             super().predict(x)
             if self.is_forward:
-                result = self.__predict_forward(x)
+                result = self.__predict_forward(x,debug_mode)
             else:
-                result = self.__predict_backward(x)
+                result = self.__predict_backward(x,debug_mode)
 
             return result
 
-        def __predict_forward(self,x:float) -> float:
+        def __predict_forward(self,x:float,debug_mode:str = "auto") -> float:
+
+            debug = debug_status(debug_mode)
+
             result = self.diff_table[0][0]
             newton_factor = 1
             n = len(self.diff_table)
 
-            if DEBUG:
+            if debug:
                 print(f"p({x}) = {result} ", end='+')
 
             for k in range(1, n):
@@ -489,20 +504,23 @@ class Newton(BasicInterpolation):
 
                 result += round(self.diff_table[k][0] * newton_factor, MAX_DIGITS)
 
-                if DEBUG:
+                if debug:
                     print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
 
-            if DEBUG:
+            if debug:
                 print(f"\b= {result}")
 
             return result
 
-        def __predict_backward(self, x: float) -> float:
+        def __predict_backward(self, x: float,debug_mode:str = "auto") -> float:
+
+            debug = debug_status(debug_mode)
+
             result = self.diff_table[0][-1]
             newton_factor = 1
             n = len(self.diff_table)
 
-            if DEBUG:
+            if debug:
                 print(f"p({x}) = {result} ", end='+')
 
             for k in range(1, n):
@@ -513,15 +531,18 @@ class Newton(BasicInterpolation):
 
                 result += round(self.diff_table[k][-1] * newton_factor, MAX_DIGITS)
 
-                if DEBUG:
+                if debug:
                     print(f" {self.diff_table[k][-1]} * ({newton_factor}) ", end='+')
 
-            if DEBUG:
+            if debug:
                 print(f"\b= {result}")
 
             return result
 
-        def add_point(self,x:float,f:float) -> None:
+        def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
+
+            debug = debug_status(debug_mode)
+
             super().add_point(x,f)
 
             self.MinX = min(x,self.MinX)
@@ -532,12 +553,15 @@ class Newton(BasicInterpolation):
 
             self.diff_table = self.__update_table(x,f)
 
-            if DEBUG:
+            if debug:
                 self.__print_table()
 
-        def change_direction(self) -> None:
+        def change_direction(self,debug_mode:str = "auto") -> None:
+
+            debug = debug_status(debug_mode)
+
             self.is_forward = not self.is_forward
-            if DEBUG:
+            if debug:
                 mode_str = "Forward"
                 if not self.is_forward:
                     mode_str = "Backward"
@@ -554,15 +578,12 @@ class Newton(BasicInterpolation):
         except Exception as e:
             raise e
 
-        if DEBUG:
-            print("Newton init executed")
-
     def __repr__(self):
         return repr(self.__interpolation)
     def __str__(self):
         return  str(self.__interpolation)
-    def __call__(self,x:float):
-        return self.__interpolation(x)
+    def __call__(self,x:float,debug_mode:str = "auto"):
+        return self.__interpolation(x,debug_mode)
 
     def save(self,path:str) -> bool:
         return self.__interpolation.save(path)
@@ -570,8 +591,8 @@ class Newton(BasicInterpolation):
     def load(self,path:str) -> bool:
         return self.__interpolation.load(path)
 
-    def add_point(self,x:float,f:float) -> None:
-        self.__interpolation.add_point(x,f)
+    def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
+        self.__interpolation.add_point(x,f,debug_mode)
 
 class CubicSpline(BasicInterpolation):
 
@@ -590,8 +611,8 @@ class CubicSpline(BasicInterpolation):
             self.c = c
             self.d = d
 
-        def __call__(self,x:float)-> float:
-            return self.predict(x)
+        def __call__(self,x:float,debug_mode:str = "auto")-> float:
+            return self.predict(x,debug_mode)
 
         def __str__(self) -> str:
 
@@ -605,7 +626,7 @@ class CubicSpline(BasicInterpolation):
         def __repr__(self) -> str:
             return f"CubicSpline.SplinePolynomial({self.x=},{self.a=},{self.b=},{self.c=},{self.d=})"
 
-        def predict(self,x:float) -> float:
+        def predict(self,x:float,debug_mode:str = "auto") -> float:
             factor = round(x - self.x,MAX_DIGITS)
 
             result = self.a
@@ -641,9 +662,6 @@ class CubicSpline(BasicInterpolation):
         self.MaxX = self.X_points[-1]
 
         self.__build_polynomials(dfx0,dfxn)
-
-        if DEBUG:
-            print("CubicSpline init executed")
 
     def __build_polynomials(self,dfx0:float = None,dfxn : float = None) -> None:
 
@@ -694,7 +712,7 @@ class CubicSpline(BasicInterpolation):
         for i in A:
             print(i)
 
-    def predict(self,x: float) -> float:
+    def predict(self,x: float,debug_mode:str = "auto") -> float:
         super().predict(x)
 
         for i in range(self.__n - 1):
@@ -706,7 +724,7 @@ class CubicSpline(BasicInterpolation):
 
         return self.F_points[-1]
 
-    def add_point(self,x:float,f:float) -> None:
+    def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
         raise Exception("not implemented")
 
 
@@ -725,8 +743,8 @@ if __name__ == "__main__":
 
     x12,f12 = sc(4)
     print(x12,f12[:3])
-    cs = CubicSpline(x12,f12)
-    print(cs(0))
+    cs = Newton(x12,f12)
+    print(cs(10))
     #x12 = [0,1,2]
     #f12 = [0,-1,2]
 
