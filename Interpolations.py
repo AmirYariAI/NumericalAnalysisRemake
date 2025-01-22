@@ -1,7 +1,6 @@
 import math
 from typing import List
 from conf import *
-import time
 
 class BasicInterpolation:
 
@@ -84,10 +83,8 @@ class Lagrange(BasicInterpolation):
         super().predict(x)
 
         fx : float =  0.0
-        start : float = 0
 
         if DEBUG:
-            start = time.time()
             print(f"->> Lagrange Interpolation for p({x}):")
 
         for i,fi in enumerate(self.F_points):
@@ -102,8 +99,6 @@ class Lagrange(BasicInterpolation):
 
         if DEBUG:
             print(f"\b\b= {fx}")
-            execution_time = time.time() - start
-            print(f"Execution Time : {execution_time} s")
 
         return fx
 
