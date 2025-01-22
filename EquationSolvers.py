@@ -1,20 +1,20 @@
-
 from conf import *
 from DebugAssistant import debug_status
 from typing import  List
 
 
-def table_header(n:int):
+def debug_table_header(n:int):
     word_space = (MAX_DIGITS +5 )
-    row_space = n * (word_space + 1) + 12
+    row_space = 14 + n * (word_space + 1) + max(word_space,12) +  + 7
+
     print("-( Gauss–Seidel Table )- ".center(row_space))
-    print("iteration / X ",end="|")
+    print("iteration \\ X ",end="|")
     for i in range(n):
         print(f"X{i}".center(word_space),end='|')
 
-    print(' mean error ')
+    print('mean error'.center(max(word_space,12)),' note ',sep='|')
 
-def tabel_row(i:int,x_values : List[float] , error : float):
+def debug_tabel_row(i:int,x_values : List[float] , error : float,note:str=""):
 
     print(f" iteration {i}  ", end="|")
     n = len(x_values)
@@ -22,9 +22,14 @@ def tabel_row(i:int,x_values : List[float] , error : float):
     for i in range(n):
         print(f"{x_values[i]}".center(word_space),end='|')
 
-    print("",error)
+    print(f" {error}".center(max(word_space,12)) , end='|')
+    print(" " + note)
 
-def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float],debug_mode:str = "auto") -> List[float]:
+def gauss_seidel(a:List[List[float]] ,
+                 starter_x : List[float] ,
+                 b : List[float],
+                 max_iteration:int = 20,
+                 debug_mode:str = "auto") -> List[float]:
 
     debug = debug_status(debug_mode)
 
@@ -36,7 +41,7 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
     x : List[float] = starter_x.copy()
 
     if debug:
-        table_header(n)
+        debug_table_header(n)
 
     epsilon = 10 ** (-MAX_DIGITS)
 
@@ -54,10 +59,10 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
 
     iteration = 0
 
-    while error > epsilon:
+    while error > epsilon and iteration < max_iteration:
 
         if debug :
-            tabel_row(i=iteration,x_values=x,error=error)
+            debug_tabel_row(i=iteration,x_values=x,error=error)
 
         for i in range(n):
             eq_value = b[i]
@@ -85,21 +90,25 @@ def gauss_seidel(a:List[List[float]] , starter_x : List[float] , b : List[float]
         iteration += 1
 
     if debug:
-        tabel_row(i=iteration, x_values=x, error=error)
+        note = "" if iteration < max_iteration else "max_iteration reached"
+
+        debug_tabel_row(i=iteration, x_values=x, error=error,note=note)
 
     return x
 
 
-#4x + y + 2z = 4
-#3x + 5y + z = 7
-#x + y + 3z = 3
+if __name__ == "__main__":
 
-a = [[4 , 1 , 2],
-     [3 , 5 , 1],
-     [1 , 1 , 3]]
+    #4x + y + 2z = 4
+    #3x + 5y + z = 7
+    #x + y + 3z = 3
 
-b = [4 , 7 , 3]
-x = [0 , 0 , 0]
+    a = [[4 , 1 , 2],
+        [3 , 5 , 1],
+        [1 , 1 , 3]]
 
-x=gauss_seidel(a,x,b)
-print(x)
+    b = [4 , 7 , 3]
+    x = [0 , 0 , 0]
+
+    x=gauss_seidel(a,x,b)
+    print(x)
