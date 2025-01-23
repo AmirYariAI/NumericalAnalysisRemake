@@ -1,6 +1,7 @@
 import math
 from typing import List
 from DebugAssistant import debug_status
+from EquationSolvers import EquationSolvers
 from conf import *
 
 class BasicInterpolation:
@@ -639,8 +640,7 @@ class CubicSpline(BasicInterpolation):
     __polynomials: List[SplinePolynomial] = []
     __n : int = 0
 
-    def __init__(self,x_points:List[float], f_points:List[float],
-                 dfx0:float = None,dfxn : float = None) -> None:
+    def __init__(self,x_points:List[float], f_points:List[float]) -> None:
 
         super().__init__(x_points,f_points,process_point=False)
 
@@ -661,9 +661,9 @@ class CubicSpline(BasicInterpolation):
         self.MinX = self.X_points[0]
         self.MaxX = self.X_points[-1]
 
-        self.__build_polynomials(dfx0,dfxn)
+        self.__build_polynomials()
 
-    def __build_polynomials(self,dfx0:float = None,dfxn : float = None) -> None:
+    def __build_polynomials(self) -> None:
 
         h : List[float] = []
         self.__polynomials : List[CubicSpline.SplinePolynomial] = []
@@ -680,12 +680,8 @@ class CubicSpline(BasicInterpolation):
 
         print(h)
 
-        if dfx0 and dfxn:
-            self.__polynomials[0 ].b = dfx0
-            self.__polynomials[-1].b = dfxn
-        else:
-            self.__polynomials[0 ].c = 0
-            self.__polynomials[-1].c = 0
+        self.__polynomials[0 ].c = 0
+        self.__polynomials[-1].c = 0
 
         # Ac = y
         A : List[List[float]] = []
@@ -727,6 +723,117 @@ class CubicSpline(BasicInterpolation):
     def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
         raise Exception("not implemented")
 
+class LinearRegression(BasicInterpolation):
+
+    a_factors : List[float] = []
+    k : int = None
+
+    def __init__(self,x_points:List[float],f_points:List[float],k:int,debug_mode:str = "auto") -> None:
+
+        super().__init__(x_points=x_points,f_points=f_points,process_point=True)
+        self.k = k
+
+        self.__build(debug_mode ="auto")
+
+    def predict(self,x: float,debug_mode:str = "auto") -> float:
+
+        debug = debug_status(debug_mode)
+
+        f_x : float = 0
+
+        if debug:
+            print(f"f({x}) ", end="=")
+
+        for i in range(self.k, -1, -1):
+
+            if debug:
+                if i == 0:
+                    print(f" {self.a_factors[i]} ",end="= ")
+                elif i == 1:
+                    print(f" {self.a_factors[i]} * {x} ", end="+")
+                else:
+                    print(f" {self.a_factors[i]} * {x}^{i} ", end="+")
+
+            s = round(self.a_factors[i] * round(x**i,MAX_DIGITS) ,MAX_DIGITS)
+            f_x = round(f_x + s , MAX_DIGITS)
+
+        if debug:
+            print(f_x)
+
+        return f_x
+
+    def __build(self,debug_mode:str = "auto") -> None:
+
+        debug = debug_status(debug_mode)
+
+        n = len(self.X_points)
+
+        x_power_values : List[float] = [1.0] * n
+
+        x_power_sum_values : List[float] = []
+        answer_matrix: List[float] = [0] * (self.k + 1)
+
+        for i in range(2*self.k + 1):
+            x_power_sum_values.append(sum(x_power_values))
+
+            if i == 2*self.k:
+                continue
+            if i <= self.k:
+                answer_i = [x_power_values[i] * self.F_points[i] for i in range(n)]
+                answer_matrix[self.k - i] = sum(answer_i)
+
+            x_power_values = [x_power_values[i] * self.X_points[i] for i in range(n)]
+
+        factor_matrix : List[List[float]] = []
+
+        for i in range(self.k , -1 , -1):
+
+            row : List[float] = []
+
+            for j in range(i + self.k , i - 1 , -1):
+                row.append(x_power_sum_values[j])
+
+            factor_matrix.append(row)
+
+
+        a = [0] * (self.k + 1)
+
+        for i in range(self.k + 1):
+            print(factor_matrix[i] , answer_matrix[i])
+
+        self.a_factors = EquationSolvers.gauss_seidel(factor_matrix,a,answer_matrix,debug_mode='off')
+        self.a_factors.reverse()
+
+        if debug:
+            print("f(x) ",end="=")
+            for i in range(self.k,-1,-1):
+                if i == 0:
+                    print(f" {self.a_factors[i]}  ,MSE : {self.mean_squared_error()}")
+                    break
+                elif i == 1:
+                    print(f" {self.a_factors[i]} * x ", end="+")
+                    continue
+
+                print(f" {self.a_factors[i]} * x^{i} ",end="+")
+
+    def mean_squared_error(self) -> float:
+
+        mse :float = 0
+        n : int = len(self.X_points)
+
+        for x,f in zip(self.X_points,self.F_points):
+
+            f_x = self.predict(x,debug_mode="off")
+
+            error = round(f - f_x , MAX_DIGITS)
+            squared_error = round(error ** 2 , MAX_DIGITS)
+
+            mse = round(mse + squared_error , MAX_DIGITS)
+
+        mse = round(mse / n , MAX_DIGITS)
+
+        return mse
+
 
 def sc(n):
     x11 , f11 = [] , []
@@ -741,10 +848,10 @@ if __name__ == "__main__":
     #x2 = Lagrange([1,2], [20,10])
     #print(x2(1.5))
 
-    x12,f12 = sc(4)
+    x12,f12 = [0,2,3] , [10,12,14]
     print(x12,f12[:3])
-    cs = Newton(x12,f12)
-    print(cs(10))
+    cs = LinearRegression(x12,f12,k=1)
+    print(cs(0))
     #x12 = [0,1,2]
     #f12 = [0,-1,2]
 
