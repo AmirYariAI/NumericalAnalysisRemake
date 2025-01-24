@@ -1,7 +1,6 @@
 import math
-import numpy as np
 
-MAX_DIGITS = 4
+MAX_DIGITS = 10
 Debug = True
 
 def _inp_GetFunction():
@@ -184,14 +183,14 @@ def MidpointMethod(**kwargs):
             
             h = 10 ** -MAX_DIGITS
             x = a 
-            n = math.ceil((b - a)/(h*2))
+            n = math.ceil((b - a)/h)
 
             if Debug : print(f'{h=} {n=}')
             if a >= b or abs(b - a) <= h : raise ValueError(f"range ({a},{b}) is invalid ")
             
             for _ in range(n):
-                nx = x + h
-                n2x = x + 2*h
+                nx = x + h / 2
+                n2x = x + h
 
                 f_nx = f(nx)
 
@@ -315,13 +314,13 @@ def NewtonCotes(**kwargs):
         case {"function" : f , "range" : (a,b)} | {"f" : f , "range" : (a,b)} | {"f_x" : f , "range" : (a,b)}:
             
             h = 10 ** -MAX_DIGITS
-            n = math.ceil((b - a)/(h))
-            x = np.linspace(a, b, n+1)
-            y = f(x)
-            weights = np.ones(n+1)
-            weights[1:-1:2] = 4
-            weights[2:-1:2] = 2
-            _sum = (h / 3) * np.sum(weights * y)
+            #n = math.ceil((b - a)/(h))
+            #x = np.linspace(a, b, n+1)
+            #y = f(x)
+            #weights = np.ones(n+1)
+            #weights[1:-1:2] = 4
+            #weights[2:-1:2] = 2
+            #_sum = (h / 3) * np.sum(weights * y)
 
         case {"x_points":x_points,"f_points":f_points}:
 
