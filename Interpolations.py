@@ -42,22 +42,10 @@ class BasicInterpolation:
 
         return 0.0
 
-    def __str__(self) -> str:
-        return "Basic Interpolation"
-
-    def __repr__(self) -> str:
-        return "BasicInterpolation()"
-
     def add_point(self,x:float,f:float) -> None:
 
         if x in self.X_points:
             raise  ValueError(f"{x=} is already in the list")
-
-    def save(self,path:str) -> bool:
-        pass
-
-    def load(self,path:str) -> bool:
-        pass
 
 class DiffError(Exception):
     pass
@@ -583,14 +571,9 @@ class Newton(BasicInterpolation):
         return repr(self.__interpolation)
     def __str__(self):
         return  str(self.__interpolation)
+
     def __call__(self,x:float,debug_mode:str = "auto"):
         return self.__interpolation(x,debug_mode)
-
-    def save(self,path:str) -> bool:
-        return self.__interpolation.save(path)
-
-    def load(self,path:str) -> bool:
-        return self.__interpolation.load(path)
 
     def add_point(self,x:float,f:float,debug_mode:str = "auto") -> None:
         self.__interpolation.add_point(x,f,debug_mode)
