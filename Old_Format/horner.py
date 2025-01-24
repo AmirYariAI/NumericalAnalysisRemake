@@ -10,7 +10,7 @@ def Normal_method(f,x):
     time.sleep(0.5)
     return p_x
 
-def Horner_method(x):
+def Horner_method(f,x):
 
     p_x = 0
     for i in range(len(f)-1,-1,-1):
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     normal_end = time.time()
 
     horner_start = time.time()
-    p_x_h = Horner_method(x)
+    p_x_h = Horner_method(f,x)
     horner_end = time.time()
 
     print(f'Normal : p(x) = {p_x_n} ({normal_end - normal_start - 0.5})')
