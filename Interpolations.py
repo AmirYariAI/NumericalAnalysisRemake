@@ -130,7 +130,6 @@ class Newton(BasicInterpolation):
                 if not self.h:
                       self.h = x - px
                 elif self.h != round(x - px,MAX_DIGITS):
-                    print(self.h , x - px)
                     raise DiffError(f"{f"{x_points=}".split('=')[0]} Must have a same differences")
                 px = x
 
@@ -568,6 +567,7 @@ class Newton(BasicInterpolation):
         except Exception as e:
             raise e
 
+        self.is_forward = is_forward
         self.MinX       = self.__interpolation.MinX
         self.MaxX       = self.__interpolation.MaxX
         self.diff_table = self.__interpolation.diff_table
