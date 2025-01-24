@@ -59,6 +59,9 @@ class BasicInterpolation:
     def load(self,path:str) -> bool:
         pass
 
+class DiffError(Exception):
+    pass
+
 class Lagrange(BasicInterpolation):
 
     def __init__(self,x_points:List[float],f_points:List[float]):
@@ -106,9 +109,6 @@ class Lagrange(BasicInterpolation):
 
         self.X_points.append(x)
         self.F_points.append(f)
-
-class DiffError(Exception):
-    pass
 
 class Newton(BasicInterpolation):
 
@@ -617,10 +617,11 @@ class CubicSpline(BasicInterpolation):
 
         def __str__(self) -> str:
 
-            result  = f"{self.a}"
-            result += f"+ {self.b} * (x - {self.x})"
-            result += f"+ {self.c} * (x - {self.x})^2"
-            result += f"+ {self.d} * (x - {self.x})^3"
+            result  = f"S(x) = "
+            result += f"({self.a}) "
+            result += f"+ ({self.b}) * (x - {self.x}) "
+            result += f"+ ({self.c}) * (x - {self.x})^2 "
+            result += f"+ ({self.d}) * (x - {self.x})^3 "
 
             return result
 
@@ -628,19 +629,29 @@ class CubicSpline(BasicInterpolation):
             return f"CubicSpline.SplinePolynomial({self.x=},{self.a=},{self.b=},{self.c=},{self.d=})"
 
         def predict(self,x:float,debug_mode:str = "auto") -> float:
+
+            debug = debug_status(debug_mode)
+
             factor = round(x - self.x,MAX_DIGITS)
 
             result = self.a
-            result += round(self.b * (factor ** 1),MAX_DIGITS)
-            result += round(self.c * (factor ** 2),MAX_DIGITS)
-            result += round(self.d * (factor ** 3),MAX_DIGITS)
+            result = round(result + round(self.b * (factor ** 1),MAX_DIGITS),MAX_DIGITS)
+            result = round(result + self.c * (factor ** 2),MAX_DIGITS)
+            result = round(result + self.d * (factor ** 3),MAX_DIGITS)
+
+
+
+            if debug:
+                print(f"S({x}) = ({self.a}) + ({self.b}) * ({x} - {self.x}) +",end='')
+                print(f" ({self.c}) * ({x} - {self.x})^2 + ({self.d}) * ({x} - {self.x})^3 ",end='')
+                print(f" = {result}")
 
             return result
 
     __polynomials: List[SplinePolynomial] = []
     __n : int = 0
 
-    def __init__(self,x_points:List[float], f_points:List[float]) -> None:
+    def __init__(self,x_points:List[float], f_points:List[float],debug_mode:str = "auto") -> None:
 
         super().__init__(x_points,f_points,process_point=False)
 
@@ -661,54 +672,88 @@ class CubicSpline(BasicInterpolation):
         self.MinX = self.X_points[0]
         self.MaxX = self.X_points[-1]
 
-        self.__build_polynomials()
+        self.__build_polynomials(debug_mode)
 
-    def __build_polynomials(self) -> None:
+    def __build_polynomials(self,debug_mode:str = "auto") -> None:
+
+        debug = debug_status(debug_mode)
 
         h : List[float] = []
         self.__polynomials : List[CubicSpline.SplinePolynomial] = []
 
-        for i in range(self.__n -1):
+        number_of_polynomial = self.__n - 1
 
-            x:float = self.X_points[i]
-            a:float = self.F_points[i]
-            polynomial = CubicSpline.SplinePolynomial(x=x,a=a)
-            self.__polynomials.append(polynomial)
-
+        for i in range(number_of_polynomial):
             hi :float = round(self.X_points[i+1] - self.X_points[i] ,MAX_DIGITS)
             h.append(hi)
 
-        print(h)
+        c_factors: List[List[float]] = []
+        y: List[float] = []
 
-        self.__polynomials[0 ].c = 0
-        self.__polynomials[-1].c = 0
+        for i in range(1,number_of_polynomial):
 
-        # Ac = y
-        A : List[List[float]] = []
-        y : List[float] = []
+            row:List[float]= [0] * (number_of_polynomial - 1)
 
-        for i in range(1,self.__n - 1):
-
-            row :List[float] = [0 for _ in range(self.__n - 2)]
             index = i - 1
+            if i != 1:
+                row[index - 1] = h[i-1]
+            row[index] = 2*(h[i - 1] + h[i])
 
-            if index > 0:
-                row[ index-1 ] = h[index-1]
+            if i != number_of_polynomial - 1:
+                row[index+1] = h[i]
 
-            row[ index ] = 2*(h[index-1] - h[index])
+            c_factors.append(row)
 
-            if i != self.__n - 2:
-                row[ index+1 ] = h[index]
+            a_i = self.F_points[i]
+            a_ip1 = self.F_points[i + 1]
+            a_im1 = self.F_points[i - 1]
 
-            value : float = 0
-            y.append(value)
-            A.append(row)
+            value = round(3/h[i] , MAX_DIGITS) * round(a_ip1 - a_i,MAX_DIGITS)
+            value = round(value,MAX_DIGITS)
 
-        print('0000')
-        for i in A:
-            print(i)
+            value2 = round(3 / h[i - 1], MAX_DIGITS) * round(a_i - a_im1, MAX_DIGITS)
+            value2 = round(value2, MAX_DIGITS)
+
+            y.append(round(value - value2,MAX_DIGITS))
+
+        c_values = [0] * (number_of_polynomial - 1)
+
+        c_values = EquationSolvers.gauss_seidel(c_factors,c_values,y,debug_mode='off')
+        c_values.insert(0,0)
+        c_values.append(0)
+
+        if debug:
+            print("Spline Polynomials :")
+
+        for i in range(number_of_polynomial):
+
+            x: float = self.X_points[i]
+            a: float = self.F_points[i]
+
+            b_value1 : float = round(1/h[i],MAX_DIGITS) * round(self.F_points[i+1] - self.F_points[i],MAX_DIGITS)
+            b_value1 = round(b_value1,MAX_DIGITS)
+            b_value2 : float = round(h[i]/3,MAX_DIGITS) * round(2*c_values[i] - c_values[i + 1],MAX_DIGITS)
+            b_value2 = round(b_value2,MAX_DIGITS)
+
+            b:float = round(b_value1 - b_value2,MAX_DIGITS)
+
+            c: float = c_values[i]
+
+            d:float = round(round(c_values[i+1] - c_values[i],MAX_DIGITS) / (3*h[i]),MAX_DIGITS)
+
+            polynomial = CubicSpline.SplinePolynomial(x=x, a=a , b=b,c=c,d=d)
+
+            if debug :
+                print(f"{i} => {str(polynomial).ljust(28 + (MAX_DIGITS + 3) * 6)}  , x in [{self.X_points[i]} , {self.X_points[i + 1]}]")
+            self.__polynomials.append(polynomial)
+
+
+
 
     def predict(self,x: float,debug_mode:str = "auto") -> float:
+
+        debug = debug_status(debug_mode)
+
         super().predict(x)
 
         for i in range(self.__n - 1):
@@ -716,7 +761,9 @@ class CubicSpline(BasicInterpolation):
             xi1 = self.X_points[i + 1]
 
             if xi <= x < xi1:
-                return self.__polynomials[i].predict(x)
+                if debug:
+                    print(f"{i} => ",end='')
+                return self.__polynomials[i].predict(x,debug_mode)
 
         return self.F_points[-1]
 
@@ -733,7 +780,7 @@ class LinearRegression(BasicInterpolation):
         super().__init__(x_points=x_points,f_points=f_points,process_point=True)
         self.k = k
 
-        self.__build(debug_mode ="auto")
+        self.__build(debug_mode = debug_mode)
 
     def predict(self,x: float,debug_mode:str = "auto") -> float:
 
@@ -834,39 +881,9 @@ class LinearRegression(BasicInterpolation):
 
         return mse
 
-
-def sc(n):
-    x11 , f11 = [] , []
-    for i in range(10,n+10):
-        x11.append(i)
-        f11.append(i**3)
-    return x11,f11
-
 if __name__ == "__main__":
 
-    #print("Hello World")
-    #x2 = Lagrange([1,2], [20,10])
-    #print(x2(1.5))
+    test_x,test_f = [0 , 0.05 , 0.2] , [1 , 2, 3]
 
-    x12,f12 = [0,2,3] , [10,12,14]
-    print(x12,f12[:3])
-    cs = LinearRegression(x12,f12,k=1)
-    print(cs(0))
-    #x12 = [0,1,2]
-    #f12 = [0,-1,2]
-
-    #print(CC(1.5))
-    #CC.add_point(10.5,10.5**3)
-
-    # inp = input()
-    # X , Y = [] , []
-    # while inp != "":
-    #    x , y = map(float,inp.split())
-    #    X.append(x)
-    #    Y.append(y)
-    #    if len(X) > 1 :
-    #        print(x - X[-2])
-    #    inp = input()
-
-    #x3 = x2.add_point(1.5,0)
-    #print(x3(1.5))
+    cs = CubicSpline(test_x,test_f)
+    print(cs(1))
