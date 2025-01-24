@@ -20,5 +20,8 @@ def debug_status(status:str="auto"):
 
     return debug
 
+def set_max_digits(x:int):
+    conf.MAX_DIGITS = x
+
 if __name__ == "__main__":
     print("DebugAssistant.py")
