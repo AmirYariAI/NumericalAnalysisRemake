@@ -828,9 +828,6 @@ class LinearRegression(BasicInterpolation):
 
         a = [0] * (self.k + 1)
 
-        for i in range(self.k + 1):
-            print(factor_matrix[i] , answer_matrix[i])
-
         self.a_factors = EquationSolvers.gauss_seidel(factor_matrix,a,answer_matrix,debug_mode='off')
         self.a_factors.reverse()
 
