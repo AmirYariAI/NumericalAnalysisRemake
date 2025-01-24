@@ -562,10 +562,16 @@ class Newton(BasicInterpolation):
 
         try:
             self.__interpolation = Newton.FiniteDifferences(x_points, f_points,is_forward)
+            self.h = self.__interpolation.h
         except DiffError:
             self.__interpolation = Newton.DividedDifferences(x_points,f_points,is_forward)
         except Exception as e:
             raise e
+
+        self.MinX       = self.__interpolation.MinX
+        self.MaxX       = self.__interpolation.MaxX
+        self.diff_table = self.__interpolation.diff_table
+
 
     def __repr__(self):
         return repr(self.__interpolation)
