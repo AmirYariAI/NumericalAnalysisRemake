@@ -41,7 +41,7 @@ class NewtonDerivative(Newton.FiniteDifferences):
         n = min(len(self.diff_table) - x_index , step+1) if step != -1 else len(self.diff_table) - x_index
 
         if debug:
-            print(f"f'({x}) =(", end='')
+            print(f"p'( {round(x + s * self.h,MAX_DIGITS)} ) =(", end='')
 
         for k in range(1, n):
 
@@ -128,7 +128,8 @@ if __name__ == "__main__":
     print("Test 1")
     t1_x_points, t1_f_points = [0.1,0.2,0.3,0.4],[-1,2,3,5]
     a = NewtonDerivative(t1_x_points,t1_f_points)
-    a.predict(x=0.1,step = -1)
+    a.predict(x=0.2,step = 2)
+    a.predict_next_step(x=0.1, step=2)
 
 
 
