@@ -375,7 +375,7 @@ class Newton(BasicInterpolation):
             selector_open, selector_close = "(", ")"
 
             word_space = math.ceil(math.log10(self.MaxX)) + 2 + MAX_DIGITS
-            print("-( Divided Differences Table )-".center(13 + n * word_space + n + 1))
+            print("-( Divided Differences Table )-".center(20+max_n_str + n * word_space + n + 1))
             print(" f[xi,...,xi+k] \\Xi ".center(20+max_n_str), end="|")
             for i in range(n):
                 print(f"{self.X_points[i]}".center(word_space), end='|')
