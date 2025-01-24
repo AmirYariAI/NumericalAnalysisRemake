@@ -116,13 +116,6 @@ class NewtonDerivative(Newton.FiniteDifferences):
 
             print("\b")
 
-def sc(n):
-    x11 , f11 = [] , []
-    for i in range(n):
-        x11.append(i)
-        f11.append(i**2)
-    return x11,f11
-
 if __name__ == "__main__":
 
     print("Test 1")
