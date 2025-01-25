@@ -300,37 +300,6 @@ def Simpsons38Rule(**kwargs):
                 
     return _sum
  
-def NewtonCotes(**kwargs):
-    if "Debug" in kwargs.keys():
-        Debug = kwargs["Debug"]
-        kwargs.pop("Debug")
-    else:
-        Debug = False
-    
-
-    _sum = 0
-
-    match kwargs:
-        case {"function" : f , "range" : (a,b)} | {"f" : f , "range" : (a,b)} | {"f_x" : f , "range" : (a,b)}:
-            
-            h = 10 ** -MAX_DIGITS
-            #n = math.ceil((b - a)/(h))
-            #x = np.linspace(a, b, n+1)
-            #y = f(x)
-            #weights = np.ones(n+1)
-            #weights[1:-1:2] = 4
-            #weights[2:-1:2] = 2
-            #_sum = (h / 3) * np.sum(weights * y)
-
-        case {"x_points":x_points,"f_points":f_points}:
-
-            raise ValueError("Table Function is not supported")
-
-        case _:
-            raise ValueError("Input is invalid")
-    
-    return _sum
-
 if __name__ == "__main__":
 
     print('Choose Your input type :')
@@ -353,7 +322,6 @@ if __name__ == "__main__":
     print("2.Simpson's Rule")
     print("3.Midpoint Method")
     print("4.Simpsons 3/8 Rule")
-    print("5.Newton Cotes")
 
     method = int(input('--> '))
 
@@ -369,9 +337,6 @@ if __name__ == "__main__":
             print('-->',result)
         case 4:
             result = Simpsons38Rule(**integral_input,Debug = Debug)
-            print('-->',result)
-        case 5:
-            result = NewtonCotes(**integral_input,Debug = Debug)
             print('-->',result)
         case _:
             raise ValueError(f"{method=} is invalid")
